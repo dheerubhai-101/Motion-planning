@@ -21,7 +21,7 @@ def path_search():
     path= a_star_search(origin,destination,img)
 
 
-    plot_path.plot(image,path)
+    plot_path.plot(path)
 
 if __name__ == '__main__':
     try:

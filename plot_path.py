@@ -10,5 +10,5 @@ import rospy
 
 # changing colour of pixels in the path
 
-def plot(image,path):
+def plot(path):
     pass
