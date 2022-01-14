@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sun Jan  9 10:32:32 2022
@@ -7,11 +8,12 @@ Created on Sun Jan  9 10:32:32 2022
 
 import priority_dict
 from math import dist,sqrt
-
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
 
 def get_nearest_pixels(node,image):
     pix_list=[]
-    y,x = node
+    x,y = node
     for i in range(-1,2):
         for j in range(-1,2):
             t1,t2= y+i,x+j
@@ -33,23 +35,35 @@ def get_nearest_pixels(node,image):
 # origin as a list of vertex keys.
 def get_path(origin_key, goal_key, predecessors):
     key = goal_key
-    path = [goal_key]
+    #path = [goal_key]
+    # Create a Path and PoseStamped message 
+    path= Path()
+    goal= PoseStamped()
+    #add goal_key to path
+    goal.pose.position.x= goal_key[0]
+    goal.pose.position.y= goal_key[1]
     
+    path.poses.insert(0,goal)
+
     while (key != origin_key):
         key = predecessors[key]
-        path.insert(0, key)
+        point= PoseStamped()
+        point.pose.position.x , point.pose.position.y = key
+
+        #add point to path
+        path.poses.insert(0,point)
         
     return path
 
 
 def distance_heuristic(current_node,goal_node):
-    y1,x1 = current_node
-    y2,x2 = goal_node
+    x1,y1 = current_node
+    x2,y2 = goal_node
     d= sqrt((y2-y1)**2 + (x2-x1)**2)
     d= float('%.3f'%d)
     return d
 
-def a_star_search(origin_key, goal_key, image):
+def a_star_search(origin_key, goal_key):
     # The priority queue of open vertices we've reached.
     # Keys are the vertex keys, vals are the accumulated
     # distances plus the heuristic estimates of the distance
@@ -84,7 +98,7 @@ def a_star_search(origin_key, goal_key, image):
             goal_found= True
             
         
-        for edge in get_nearest_pixels(u,image):
+        for edge in get_nearest_pixels(u):
             v=(edge[0], edge[1])
             uvCost = float(edge[2])
             h_v= distance_heuristic(v, goal_key)
