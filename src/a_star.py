@@ -24,7 +24,9 @@ def get_nearest_pixels(node,image):
                 length= dist(p, q)
                 
                 pix_list.append((t1,t2,'%.2f'%length))
-            elif pixel==0:
+            elif pixel==100:
+                length = 100000
+            elif pixel== -1:
                 continue
     return pix_list
 
@@ -82,6 +84,7 @@ def a_star_search(origin_key, goal_key, image):
         
         if u==goal_key: 
             goal_found= True
+            break
             
         
         for edge in get_nearest_pixels(u,image):

@@ -21,8 +21,11 @@ import numpy as np
 def back_grid(msg):
     global oc_grid
     grid_oc= msg.data
+
+    #grid_oc is a 1D array. To convert it to 2D array we first convert
+    #it to numpy array then reshape it
     oc_grid= np.array(grid_oc)
-    oc_grid.reshape(850,700)
+    oc_grid.reshape(3328,3328)
 
     #return grid_oc
 
@@ -50,29 +53,10 @@ def back_ground(loc):
     # return pos
 
 def path_search():
+    
     while not rospy.is_shutdown():
-        rospy.init_node('path_finder', anonymous=True)
-        # obtaining start position 
-        rospy.wait_for_message("/ground_truth/state",Odometry)
-        ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, back_ground)
         
-        origin = pos
-        # obtaining goal position
-        rospy.wait_for_message("/move_base_simple/goal",PoseStamped)
-        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, back_nation )
-        destination= goal    
-        # create an object to store map data
-        rospy.wait_for_message("/map",OccupancyGrid)
-        grid_sub= rospy.Subscriber('/map', OccupancyGrid, back_grid)
-               
-        
-        
-        #grid_oc is a 1D array. To convert it to 2D array we first convert
-        #it to numpy array then reshape it
-        
-
-
-
+    
         path= a_star_search(origin,destination,oc_grid)
 
         plot_path.plot(path)
@@ -80,8 +64,30 @@ def path_search():
 
 if __name__ == '__main__':
     try:
-         
+        rospy.init_node('path_finder', anonymous=True)
+        # obtaining start position 
+        rospy.wait_for_message("/ground_truth/state",Odometry)
+        ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, back_ground)
         
+        #origin = pos
+        # obtaining goal position
+        rospy.wait_for_message("/move_base_simple/goal",PoseStamped)
+        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, back_nation )
+        #destination= goal    
+        # create an object to store map data
+        rospy.wait_for_message("/map",OccupancyGrid)
+        grid_sub= rospy.Subscriber('/map', OccupancyGrid, back_grid)
+
+        res= 0.030054
+        # converting real-time coordinates to occupancy grid indices 
+        x1,y1 = pos[0], pos[1]
+        col1, row1= int((x1+50.01)/res) , int((y1+50.01)/res)
+        origin = (row1,col1)
+
+        x2,y2 = goal[0], goal[1]
+        col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
+        destination = (row2,col2)
+
         path_search()
     
     except rospy.ROSInterruptException:
