@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sun Jan  9 10:32:32 2022
@@ -7,24 +8,27 @@ Created on Sun Jan  9 10:32:32 2022
 
 import priority_dict
 from math import dist,sqrt
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
 
-
-def get_nearest_pixels(node,image):
+def get_nearest_cells(node,ocgrid):
     pix_list=[]
-    y,x = node
+    yr,xr = node
+    y, x = int(yr/0.030) , (xr/0.030)
+    
     for i in range(-1,2):
         for j in range(-1,2):
             t1,t2= y+i,x+j
-            pixel=image[t1,t2]
+            pixel=ocgrid[t1,t2]
             if t1==y and t2==x:
                 continue
-            elif pixel==255:
+            elif pixel==0:
                 p= [y,x]
                 q= [t1,t2]
                 length= dist(p, q)
                 
                 pix_list.append((t1,t2,'%.2f'%length))
-            elif pixel==0:
+            elif pixel==100:
                 continue
     return pix_list
 
@@ -33,11 +37,23 @@ def get_nearest_pixels(node,image):
 # origin as a list of vertex keys.
 def get_path(origin_key, goal_key, predecessors):
     key = goal_key
-    path = [goal_key]
+    #path = [goal_key]
+    # Create a Path and PoseStamped message 
+    path= Path()
+    goal= PoseStamped()
+    #add goal_key to path
+    goal.pose.position.x= goal_key[0]
+    goal.pose.position.y= goal_key[1]
     
+    path.poses.insert(0,goal)
+
     while (key != origin_key):
         key = predecessors[key]
-        path.insert(0, key)
+        point= PoseStamped()
+        point.pose.position.x , point.pose.position.y = key
+
+        #add point to path
+        path.poses.insert(0,point)
         
     return path
 
@@ -49,7 +65,7 @@ def distance_heuristic(current_node,goal_node):
     d= float('%.3f'%d)
     return d
 
-def a_star_search(origin_key, goal_key, image):
+def a_star_search(origin_key, goal_key, map_grid):
     # The priority queue of open vertices we've reached.
     # Keys are the vertex keys, vals are the accumulated
     # distances plus the heuristic estimates of the distance
@@ -84,7 +100,7 @@ def a_star_search(origin_key, goal_key, image):
             goal_found= True
             
         
-        for edge in get_nearest_pixels(u,image):
+        for edge in get_nearest_cells(u, map_grid):
             v=(edge[0], edge[1])
             uvCost = float(edge[2])
             h_v= distance_heuristic(v, goal_key)
