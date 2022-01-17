@@ -52,7 +52,7 @@ def back_ground(loc):
     # pos = loc.pose.pose.position
     # return pos
 
-def path_search():
+def path_search(origin,destination):
     
     while not rospy.is_shutdown():
         
@@ -84,11 +84,12 @@ if __name__ == '__main__':
         col1, row1= int((x1+50.01)/res) , int((y1+50.01)/res)
         origin = (row1,col1)
 
-        x2,y2 = goal[0], goal[1]
+        x2 = goal[0] 
+        y2 = goal[1]
         col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
         destination = (row2,col2)
 
-        path_search()
+        path_search(origin,destination)
     
     except rospy.ROSInterruptException:
         pass
