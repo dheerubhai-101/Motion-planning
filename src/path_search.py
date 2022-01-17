@@ -29,7 +29,7 @@ def back_grid(msg):
 
     #return grid_oc
 
-def back_nation(target):
+def goal_callback(target):
     global goal
     dx = target.pose.position.x
     dy = target.pose.position.y
@@ -39,7 +39,7 @@ def back_nation(target):
     # goal = target.pose.position
     # return goal
 
-def back_ground(loc):
+def start_callback(loc):
     global pos
     ox = loc.pose.pose.position.x
     oy = loc.pose.pose.position.y
@@ -67,12 +67,12 @@ if __name__ == '__main__':
         rospy.init_node('path_finder', anonymous=True)
         # obtaining start position 
         rospy.wait_for_message("/ground_truth/state",Odometry)
-        ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, back_ground)
+        ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, start_callback)
         
         #origin = pos
         # obtaining goal position
         rospy.wait_for_message("/move_base_simple/goal",PoseStamped)
-        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, back_nation )
+        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, goal_callback )
         #destination= goal    
         # create an object to store map data
         rospy.wait_for_message("/map",OccupancyGrid)
