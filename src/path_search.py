@@ -69,12 +69,12 @@ if __name__ == '__main__':
         res= 0.030054
         rospy.init_node('path_finder', anonymous=True)
         # obtaining start position 
-        rospy.wait_for_message("/ground_truth/state",Odometry)
+
         ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, start_callback)
         rospy.Rate(1)
         #origin = pos
         # obtaining goal position
-        rospy.wait_for_message("/move_base_simple/goal",PoseStamped)
+        
         destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, goal_callback)
         rospy.Rate(1)
         x2 = goal[0] 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         destination = (row2,col2)
         #destination= goal    
         
-        rospy.wait_for_message("/map",OccupancyGrid)
+        
         grid_sub= rospy.Subscriber('/map', OccupancyGrid, back_grid)
         rospy.Rate(1)
 
