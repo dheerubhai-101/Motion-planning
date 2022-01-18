@@ -37,6 +37,7 @@ def plot(route):
     
     #creating a publisher for path
     path_pub= rospy.Publisher(path_topic, Path, queue_size=10)
-
-    #publishing the topic to rviz
-    path_pub.publish(path)
+    while not rospy.is_shutdown():
+        #publishing the topic to rviz
+        path_pub.publish(path)
+        rospy.spin()

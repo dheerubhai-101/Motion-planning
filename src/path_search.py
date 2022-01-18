@@ -15,8 +15,9 @@ import plot_path
 import rospy
 import numpy as np
 
-
-
+# oc_grid = np.empty(1) 
+# pos = []
+# goal = []
 
 def back_grid(msg):
     # create an object to store map data
@@ -37,7 +38,9 @@ def start_callback(loc):
     ox = loc.pose.pose.position.x
     oy = loc.pose.pose.position.y
     #oz = loc.pose.pose.position.z    
-    pos = [ox,oy]
+    pos = []
+    pos.append(ox)
+    pos.append(oy)
     # pos = Point()
     # # pos.x = loc.pose.pose.x
     # # pos.y = loc.pose.pose.y
@@ -50,12 +53,23 @@ def goal_callback(target):
     dx = target.pose.position.x
     dy = target.pose.position.y
     
-    goal = [dx,dy]
+    goal = []
+    goal.append(dx)
+    goal.append(dy)
     # goal = Point()
     # goal = target.pose.position
     # return goal
 
-def path_search(origin,destination):
+def path_search():
+    
+    # converting real-time coordinates to occupancy grid indices 
+    x1,y1 = pos[0], pos[1]
+    col1, row1= int((x1+50.01)/res) , int((y1+50.01)/res)
+    origin = (row1,col1)
+    x2 = goal[0] 
+    y2 = goal[1]
+    col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
+    destination = (row2,col2)
     
     while not rospy.is_shutdown():
 
@@ -71,31 +85,20 @@ if __name__ == '__main__':
         # obtaining start position 
 
         ori_sub = rospy.Subscriber('/ground_truth/state',Odometry, start_callback)
-        rospy.Rate(1)
-        #origin = pos
+    
         # obtaining goal position
         
-        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, goal_callback)
-        rospy.Rate(1)
-        x2 = goal[0] 
-        y2 = goal[1]
-        col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
-        destination = (row2,col2)
-        #destination= goal    
-        
+        destin_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, goal_callback)   
         
         grid_sub= rospy.Subscriber('/map', OccupancyGrid, back_grid)
         rospy.Rate(1)
 
         
-        # converting real-time coordinates to occupancy grid indices 
-        x1,y1 = pos[0], pos[1]
-        col1, row1= int((x1+50.01)/res) , int((y1+50.01)/res)
-        origin = (row1,col1)
+        
 
         
 
-        path_search(origin,destination)
+        path_search()
     
     except rospy.ROSInterruptException:
         pass
