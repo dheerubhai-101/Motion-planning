@@ -20,7 +20,7 @@ def plot(route):
     path.header.frame_id = "map"
     res= 0.030054
     #path= poses
-    for i in path:
+    for i in route:
         row , col = i
         y = res*row - 50.01
         x = res*col - 50.01
@@ -31,13 +31,13 @@ def plot(route):
         path.poses.append(point)
 
 
-    rospy.init_node('Path',anonymous=True)
+    #rospy.init_node('Path',anonymous=True)
     
     path_topic= 'TrajectoryPlannerROS/global_plan'
-    
+    rate = rospy.Rate(5)
     #creating a publisher for path
     path_pub= rospy.Publisher(path_topic, Path, queue_size=10)
     while not rospy.is_shutdown():
         #publishing the topic to rviz
         path_pub.publish(path)
-        rospy.spin()
+        rate.sleep()

@@ -18,7 +18,7 @@ def get_nearest_pixels(node,image):
             pixel=image[t1,t2]
             if t1==y and t2==x:
                 continue
-            elif pixel==255:
+            elif pixel==0:
                 p= [y,x]
                 q= [t1,t2]
                 length= dist(p, q)
