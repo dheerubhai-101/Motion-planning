@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from calendar import c
+from re import L
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
@@ -15,7 +16,8 @@ import priority_dict
 from math import dist,sqrt
 from std_msgs.msg import Float64
 import math
- 
+
+
 def euler_from_quaternion(x, y, z, w):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
@@ -162,7 +164,8 @@ def callback(pose_msg):
     wq = pose_msg.pose.pose.orientation.w    
 
 def path_search(origin,destination,oc_grid,a,b):
-    
+    R= 0.08
+    L= 0.41
     route= a_star_search(origin,destination,oc_grid)
     path= Path()
     path.header.frame_id = "map"
@@ -179,7 +182,7 @@ def path_search(origin,destination,oc_grid,a,b):
     
     track.append((a,b))
     # print(track)
-    theta= 0
+    w_int= 0
     old_e = 0
     E = 0
     w=0
@@ -193,34 +196,35 @@ def path_search(origin,destination,oc_grid,a,b):
         error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
         e_dot= error - old_e #Differential term
         E = E + error #Integral term
-        V= K_v*error + K_d*e_dot 
+        V= K_v*error + K_d*e_dot + K_i*E
         old_e = error
         
         theta_star= atan2(des_y-y,des_x-x)
-        k_t= 1
+        k_t= 3
         k_d= 5
-
+        k_i= 2
 
         #To find difference in desired and current orientation
         #If positive, then robot has to turn counter-clockwise
         #If negative, then robot has to turn clockwise
         #If zero, then robot moves forward
-        F = theta_star - yaw_z
-        F = float('%.2f'%F) 
-        
+        # F = theta_star - yaw_z
+        # F = float('%.2f'%F) 
+        theta= yaw_z
         w_star= theta_star-theta
         w_dot= w_star-w
-
-        W=k_t*w_star+ k_d*w_dot 
+        w_int= w_int + w_star 
+        W=k_t*w_star+ k_d*w_dot + k_i*w_int
         
-        theta = theta_star
         w= w_star
 
-        if F==0:
-            pub[0].publish(V)
-            pub[1].publish(-V)
-            pub[2].publish(V)
-            pub[3].publish(-V)
+        Vl = V/R - w/(2*R)
+        Vr = V/R + w/(2*R)
+       
+        pub[0].publish(V)
+        pub[1].publish(-V)
+        pub[2].publish(V)
+        pub[3].publish(-V)
 
             
         # if pressed_key=="s":
@@ -230,18 +234,18 @@ def path_search(origin,destination,oc_grid,a,b):
         #     pub[3].publish(10)
 
         #If robot has to turn left    
-        elif F>0:
-            pub[0].publish(W)
-            pub[1].publish(W)
-            pub[2].publish(W)
-            pub[3].publish(W)
+        # elif F>0:
+        #     pub[0].publish(W)
+        #     pub[1].publish(W)
+        #     pub[2].publish(W)
+        #     pub[3].publish(W)
             
             
-        elif F<0:
-            pub[0].publish(W)
-            pub[1].publish(W)
-            pub[2].publish(W)
-            pub[3].publish(W)
+        # elif F<0:
+        #     pub[0].publish(W)
+        #     pub[1].publish(W)
+        #     pub[2].publish(W)
+        #     pub[3].publish(W)
 
         rate.sleep()
 
