@@ -190,7 +190,7 @@ def path_search(origin,destination,oc_grid,a,b):
         roll_x, pitch_y, yaw_z = euler_from_quaternion(xq, yq, zq, wq)
         des_x , des_y = point
 
-        K_v=2
+        K_v=5
         K_d=10
         K_i= 3
         error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
@@ -218,13 +218,13 @@ def path_search(origin,destination,oc_grid,a,b):
         
         w= w_star
 
-        Vl = V/R - w/(2*R)
-        Vr = V/R + w/(2*R)
+        Vl = V/R - W/(2*R)
+        Vr = V/R + W/(2*R)
        
-        pub[0].publish(V)
-        pub[1].publish(-V)
-        pub[2].publish(V)
-        pub[3].publish(-V)
+        pub[0].publish(Vl)
+        pub[1].publish(-Vr)
+        pub[2].publish(Vl)
+        pub[3].publish(-Vr)
 
             
         # if pressed_key=="s":
