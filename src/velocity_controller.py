@@ -218,8 +218,8 @@ def path_search(origin,destination,oc_grid,a,b):
         
         w= w_star
 
-        Vl = V/R - W/(2*R)
-        Vr = V/R + W/(2*R)
+        Vl = V/R - (W*L)/(2*R)
+        Vr = V/R + (W*L)/(2*R)
        
         pub[0].publish(Vl)
         pub[1].publish(-Vr)
