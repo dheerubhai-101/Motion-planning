@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from calendar import c
-from re import L
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
@@ -164,8 +162,7 @@ def callback(pose_msg):
     wq = pose_msg.pose.pose.orientation.w    
 
 def path_search(origin,destination,oc_grid,a,b):
-    R= 0.08
-    L= 0.41
+    
     route= a_star_search(origin,destination,oc_grid)
     path= Path()
     path.header.frame_id = "map"
@@ -180,53 +177,17 @@ def path_search(origin,destination,oc_grid,a,b):
         #add point to route
         track.append(point)
     
+    rate= rospy.Rate(5)    
+
     track.append((a,b))
-    # print(track)
-    w_int= 0
-    old_e = 0
-    E = 0
-    w=0
-    for point in track:
-        roll_x, pitch_y, yaw_z = euler_from_quaternion(xq, yq, zq, wq)
-        des_x , des_y = point
+    return track    
 
-        K_v=5
-        K_d=10
-        K_i= 3
-        error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
-        e_dot= error - old_e #Differential term
-        E = E + error #Integral term
-        V= K_v*error + K_d*e_dot + K_i*E
-        old_e = error
-        
-        theta_star= atan2(des_y-y,des_x-x)
-        k_t= 3
-        k_d= 5
-        k_i= 2
-
-        #To find difference in desired and current orientation
-        #If positive, then robot has to turn counter-clockwise
-        #If negative, then robot has to turn clockwise
-        #If zero, then robot moves forward
-        # F = theta_star - yaw_z
-        # F = float('%.2f'%F) 
-        theta= yaw_z
-        w_star= theta_star-theta
-        w_dot= w_star-w
-        w_int= w_int + w_star 
-        W=k_t*w_star+ k_d*w_dot + k_i*w_int
-        
-        w= w_star
-
-        Vl = V/R - (W*L)/(2*R)
-        Vr = V/R + (W*L)/(2*R)
-       
-        pub[0].publish(Vl)
-        pub[1].publish(-Vr)
-        pub[2].publish(Vl)
-        pub[3].publish(-Vr)
-
-            
+                  #To find difference in desired and current orientation
+            #If positive, then robot has to turn counter-clockwise
+            #If negative, then robot has to turn clockwise
+            #If zero, then robot moves forward
+            # F = theta_star - yaw_z
+            # F = float('%.2f'%F)   
         # if pressed_key=="s":
         #     pub[0].publish(-10)
         #     pub[1].publish(10)
@@ -247,7 +208,6 @@ def path_search(origin,destination,oc_grid,a,b):
         #     pub[2].publish(W)
         #     pub[3].publish(W)
 
-        rate.sleep()
 
 def joint_name(number):
     name= '/joint'+ str(number)+'_vel_controller/command'
@@ -294,6 +254,7 @@ if __name__ == '__main__':
         col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
         destination = (row2,col2)
 
+        rate= rospy.Rate(1)
 
         joints=[]
         pub=[]
@@ -303,11 +264,53 @@ if __name__ == '__main__':
             joints.append(joint_name(i+1))
             pub.append(rospy.Publisher(joints[i], Float64 , queue_size=10))
         
-        rospy.init_node('teleop',anonymous=True)
-        rate= rospy.Rate(1)
-
-
-        path_search(origin, destination, oc_grid,x2,y2)
     
+
+
+        track= path_search(origin, destination, oc_grid,x2,y2) #A* search path as a list of coordinates
+
+
+        R= 0.08
+        L= 0.41
+        w_int= 0
+        old_e = 0
+        E = 0
+        w=0
+        for point in track:
+            roll_x, pitch_y, yaw_z = euler_from_quaternion(xq, yq, zq, wq)
+            des_x , des_y = point
+            K_v=5
+            K_d=10
+            K_i= 3
+            error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
+            e_dot= error - old_e #Differential term
+            E = E + error #Integral term
+            V= K_v*error + K_d*e_dot + K_i*E
+            old_e = error
+            
+            theta_star= atan2(des_y-y,des_x-x)
+            k_t= 3
+            k_d= 5
+            k_i= 2
+
+  
+            theta= yaw_z
+            w_star= theta_star-theta
+            w_dot= w_star-w
+            w_int= w_int + w_star 
+            W=k_t*w_star+ k_d*w_dot + k_i*w_int
+            
+            w= w_star
+
+            Vl = V/R - (W*L)/(2*R)
+            Vr = V/R + (W*L)/(2*R)
+        
+            pub[0].publish(Vl)
+            pub[1].publish(-Vr)
+            pub[2].publish(Vl)
+            pub[3].publish(-Vr)
+            rate.sleep()
+
+
     except rospy.ROSInterruptException:
         pass
