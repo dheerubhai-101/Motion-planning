@@ -12,7 +12,7 @@ import math
 from nav_msgs.msg import Path
 
 
-def callback(pose_msg):
+def pose_callback(pose_msg):
     global x,y,xq,yq,zq,wq
     x= pose_msg.pose.pose.position.x
     y= pose_msg.pose.pose.position.x
@@ -54,20 +54,17 @@ def joint_name(number):
 
 
 if __name__ == '__main__':
-    #global x,y,xq,yq,zq,wq
+    # global x,y,xq,yq,zq,wq
 
     # Node initiliazation   
     rospy.init_node('vel_publisher', anonymous=True)
     path = rospy.wait_for_message("TrajectoryPlannerROS/global_plan", Path)
-    pos = rospy.Subscriber("/ground_truth/state",Odometry, callback)
     joints=[]
     pub=[]
     total_joints=4
-    rate= rospy.Rate(10)
+    rate= rospy.Rate(30)
 
-    pose_msg = rospy.wait_for_message('/ground_truth/state',Odometry)
-
-    #xq,yq,zq,wq = pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y,pose_msg.pose.pose.orientation.z, pose_msg.pose.pose.orientation.w
+    
 
     for i in range(total_joints):
         joints.append(joint_name(i+1))
@@ -84,7 +81,11 @@ if __name__ == '__main__':
         y = pose.pose.position.y
         way.append((x,y))
             
-
+    pose_msg = rospy.wait_for_message('/ground_truth/state',Odometry)
+    x= pose_msg.pose.pose.position.x
+    y= pose_msg.pose.pose.position.x
+    xq,yq,zq,wq = pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y,pose_msg.pose.pose.orientation.z, pose_msg.pose.pose.orientation.w
+           
     R= 0.08
     L= 0.41
     w_int= 0
@@ -96,24 +97,30 @@ if __name__ == '__main__':
     dx = goal[0]
     dy = goal[1]
     
-    
-    dist = sqrt((dx-x)**2 + (dy-y)**2)
+
+    # error = sqrt((dx-x)**2 + (dy-y)**2)
 
     while not rospy.is_shutdown(): 
+
         for point in way:
-            dist = sqrt((dx-x)**2 + (dy-y)**2)
+            rospy.Subscriber("/ground_truth/state", Odometry, pose_callback)
+
+            #Error in position from goal
+            error = sqrt((dx-x)**2 + (dy-y)**2)
             # print(x,y)
             roll_x, pitch_y, yaw_z = euler_from_quaternion(xq, yq, zq, wq)
             des_x , des_y = point
 
             K_v=20
-            K_d=10
+            K_d= 15
             K_i= 3
 
-            error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
+            # error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
             e_dot= error - old_e #Differential term
+            print("Error is ", error)
+            print("Change in error",e_dot)
             E = E + error #Integral term
-            V= K_v*dist + K_d*e_dot 
+            V= K_v*error + K_d*e_dot 
             old_e = error
 
             print(V)
