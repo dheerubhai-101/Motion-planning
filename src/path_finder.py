@@ -11,8 +11,6 @@ import rospy
 import numpy as np
 from nav_msgs.msg import Path
 
-
-
     
 
 def path_search(origin,destination,oc_grid):
@@ -39,7 +37,7 @@ def path_search(origin,destination,oc_grid):
     #rospy.init_node('Path',anonymous=True)
     
     path_topic= 'TrajectoryPlannerROS/global_plan'
-    rate= rospy.Rate(5)    
+    rate= rospy.Rate(10)    
     
     #creating a publisher for path
     path_pub= rospy.Publisher(path_topic, Path, queue_size=10)
@@ -52,7 +50,7 @@ def path_search(origin,destination,oc_grid):
 
 if __name__ == '__main__':
     try:
-        
+        print("yes")
         rospy.init_node('path_finder', anonymous=True)
 
         # obtaining grid
@@ -65,11 +63,14 @@ if __name__ == '__main__':
         oc_grid= np.array(grid_oc)
         oc_grid= np.reshape(oc_grid,(3328,3328))
 
+
         # obtaining start position 
         start=rospy.wait_for_message("/ground_truth/state",Odometry)
 
         x1 = start.pose.pose.position.x
         y1 = start.pose.pose.position.y
+
+        print((x1,y1))
 
         res= 0.030054
         # converting real-time coordinates to occupancy grid indices 
@@ -83,6 +84,8 @@ if __name__ == '__main__':
         x2 = goal.pose.position.x
         y2 = goal.pose.position.y
         res= 0.030054
+        print((x2,y2))
+
         # converting real-time coordinates to occupancy grid indices 
         col2, row2= int((x2+50.01)/res) , int((y2+50.01)/res)
         destination = (row2,col2)

@@ -147,10 +147,10 @@ def a_star_search(origin_key, goal_key, image):
 
 
 def callback(pose_msg):
-    global x,y,xq,yq,zq,wq
+    global x,y,xq,yq,zq,wq, pose
     x= pose_msg.pose.pose.position.x
     y= pose_msg.pose.pose.position.x
-
+    pose=pose_msg
     # u= pose_msg.twist.twist.linear.x
     # v= pose_msg.twist.twist.linear.y
     # c= sqrt(u**2+v**2)
@@ -245,7 +245,7 @@ if __name__ == '__main__':
         
         # obtaining goal position
         goal=rospy.wait_for_message("/move_base_simple/goal",PoseStamped)
-    
+        print(goal)
         x2 = goal.pose.position.x
         y2 = goal.pose.position.y
 
@@ -276,7 +276,11 @@ if __name__ == '__main__':
         old_e = 0
         E = 0
         w=0
+
+        dis = sqrt((x2-x)**2+(y2-y)**2)
+
         for point in track:
+            # print(point)
             roll_x, pitch_y, yaw_z = euler_from_quaternion(xq, yq, zq, wq)
             des_x , des_y = point
             K_v=5
@@ -285,15 +289,15 @@ if __name__ == '__main__':
             error= sqrt(pow(des_x-x,2)+pow(des_y-y,2)) #Proportional term
             e_dot= error - old_e #Differential term
             E = E + error #Integral term
-            V= K_v*error + K_d*e_dot + K_i*E
+            V= K_v*dis + K_d*e_dot + K_i*E
             old_e = error
-            
+            print(V)
             theta_star= atan2(des_y-y,des_x-x)
             k_t= 3
             k_d= 5
             k_i= 2
 
-  
+
             theta= yaw_z
             w_star= theta_star-theta
             w_dot= w_star-w
@@ -309,6 +313,9 @@ if __name__ == '__main__':
             pub[1].publish(-Vr)
             pub[2].publish(Vl)
             pub[3].publish(-Vr)
+
+            print(pose)
+
             rate.sleep()
 
 
